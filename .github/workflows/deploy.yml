@@ -1,0 +1,118 @@
+name: Deploy Shiksha Setu Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./shiksha-setu-frontend
+
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: ./shiksha-setu-frontend
+        continue-on-error: true
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./shiksha-setu-frontend
+
+  deploy-frontend:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./shiksha-setu-frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./shiksha-setu-frontend
+        env:
+          VITE_API_URL: ${{ secrets.PROD_API_URL }}
+
+      - name: Deploy to Vercel
+        uses: vercel/actions/deploy-production@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./shiksha-setu-frontend
+
+      - name: Post deployment notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Frontend deployment to Vercel completed'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build backend
+        run: mvn clean package -DskipTests
+        working-directory: ./shiksha-setu-backend
+
+      - name: Deploy to Railway
+        uses: railway-app/deploy-action@v1
+        with:
+          token: ${{ secrets.RAILWAY_TOKEN }}
+          service: shiksha-setu-backend
+          working-directory: ./shiksha-setu-backend
+
+      - name: Post deployment notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Backend deployment to Railway completed'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

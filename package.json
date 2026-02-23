@@ -1,0 +1,12 @@
+{
+  "name": "shiksha-setu",
+  "version": "1.0.0",
+  "description": "Premium Learning Management System",
+  "scripts": {
+    "start": "START_SERVERS.bat",
+    "verify": "verify-setup.bat"
+  },
+  "keywords": ["lms", "education", "learning", "react", "spring-boot"],
+  "author": "Shiksha Setu Team",
+  "license": "MIT"
+}
