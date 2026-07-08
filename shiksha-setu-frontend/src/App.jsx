@@ -12,7 +12,6 @@ import { Courses } from './pages/courses/Courses';
 import { CourseDetail } from './pages/courses/CourseDetail';
 import CourseManagement from './pages/courses/CourseManagement';
 import { Categories } from './pages/Categories';
-import { TestPage } from './pages/TestPage';
 import StudentDashboard from './pages/dashboard/StudentDashboard';
 import WorkingMentorDashboard from './pages/dashboard/WorkingMentorDashboard';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
@@ -55,7 +54,6 @@ function App() {
           <Route path="/courses" element={<Courses />} />
           <Route path="/course/:courseId" element={<CourseDetail />} />
           <Route path="/categories" element={<Categories />} />
-          <Route path="/test" element={<TestPage />} />
 
           {/* Protected Routes */}
           <Route
